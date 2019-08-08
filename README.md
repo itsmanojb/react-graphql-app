@@ -1,2 +1,2 @@
-# into-the-wild
-An application for information on movies.
+# Into The Wild
+IMDB like application for information on movies.
