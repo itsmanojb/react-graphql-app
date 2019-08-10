@@ -2,23 +2,22 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const graphQlHTTP = require('express-graphql');
 const { buildSchema } = require('graphql');
-// const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 
-const movies = [];
-
 // const schema = require('./schema/schema');
+const Movie = require('./models/movie');
 
 const app = express();
 dotenv.config();
 const port = process.env.PORT || 4000
 
-// const mongoURI = `mongodb://${process.env.MLAB_USER}:${process.env.MLAB_PW}@${process.env.MLAB_SERV}/${process.env.MLAB_DB}`;
-// mongoose.connect(mongoURI, { useNewUrlParser: true });
-// mongoose.connection.once('open', () => {
-//     console.log('Connected to Database');
-// });
+const mongoURI = `mongodb://${process.env.MLAB_USER}:${process.env.MLAB_PW}@${process.env.MLAB_SERV}/${process.env.MLAB_DB}`;
+mongoose.connect(mongoURI, { useNewUrlParser: true });
+mongoose.connection.once('open', () => {
+    console.log('Connected to Database');
+});
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -51,18 +50,32 @@ app.use('/graphql', graphQlHTTP({
         }
     `),
     rootValue: {
-        movies: () => {
-            return movies;
+        movies: async () => {
+            try {
+                const movies = await Movie.find();
+                return movies.map(movie => {
+                    return { ...movie._doc };
+                });
+            }
+            catch (err) {
+                console.log(err);
+                throw err;
+            }
         },
-        addMovie: (args) => {
-            const movie = {
-                _id: Math.random().toString(),
+        addMovie: async args => {
+            const movie = new Movie({
                 title: args.movie.title,
                 year: args.movie.year,
                 director: args.movie.director
+            })
+            try {
+                const result = await movie.save();
+                return { ...result._doc };
             }
-            movies.push(movie);
-            return movie;
+            catch (err) {
+                console.log(err);
+                throw err;
+            }
         } 
     },
     graphiql: true
