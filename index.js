@@ -2,11 +2,13 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const graphQlHTTP = require('express-graphql');
 const { buildSchema } = require('graphql');
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 
-const schema = require('./schema/schema');
+const movies = [];
+
+// const schema = require('./schema/schema');
 
 const app = express();
 dotenv.config();
@@ -22,14 +24,26 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use('/graphql', graphQlHTTP({
     schema: buildSchema(`
+        type Movie {
+            _id: ID!
+            title: String!
+            year: Int
+            director: String!
+        }
+
+        input MovieInput {
+            title: String!
+            year: Int
+            director: String!
+        }
+
         type RootQuery {
-            movies: [String!]!
+            movies: [Movie!]!
         }
 
         type RootMutation {
-            addMovie(name: String): String
+            addMovie(movie: MovieInput): Movie
         }
-
 
         schema {
             query: RootQuery
@@ -38,11 +52,17 @@ app.use('/graphql', graphQlHTTP({
     `),
     rootValue: {
         movies: () => {
-            return ['Titanic', 'I.T'];
+            return movies;
         },
         addMovie: (args) => {
-            const movieName = args.name;
-            return movieName;
+            const movie = {
+                _id: Math.random().toString(),
+                title: args.movie.title,
+                year: args.movie.year,
+                director: args.movie.director
+            }
+            movies.push(movie);
+            return movie;
         } 
     },
     graphiql: true
