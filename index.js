@@ -8,6 +8,7 @@ const cors = require('cors');
 
 // const schema = require('./schema/schema');
 const Movie = require('./models/movie');
+const Director = require('./models/director');
 
 const app = express();
 dotenv.config();
@@ -26,8 +27,19 @@ app.use('/graphql', graphQlHTTP({
         type Movie {
             _id: ID!
             title: String!
-            year: Int
+            year: Int!
             director: String!
+        }
+
+        type Director {
+            _id: ID!
+            name: String!
+            birthday: String!
+        }
+
+        input DirectorInput {
+            name: String!
+            birthday: String!
         }
 
         input MovieInput {
@@ -42,6 +54,7 @@ app.use('/graphql', graphQlHTTP({
 
         type RootMutation {
             addMovie(movie: MovieInput): Movie
+            addDirector(director: DirectorInput): Director
         }
 
         schema {
@@ -62,20 +75,52 @@ app.use('/graphql', graphQlHTTP({
                 throw err;
             }
         },
-        addMovie: async args => {
+        addMovie: args => {
             const movie = new Movie({
                 title: args.movie.title,
                 year: args.movie.year,
-                director: args.movie.director
+                director: '5d4ede7be361ba051fcafb45'
             })
-            try {
-                const result = await movie.save();
-                return { ...result._doc };
-            }
-            catch (err) {
+
+            return movie
+            .save()
+            .then(result => {
+                addedMovie = { ...result._doc };
+                return Director.findById('5d4ede7be361ba051fcafb45');
+            })
+            .then(director => {
+                if(!director) {
+                    throw new Error('Director doesn\'t Exist');
+                }
+                director.movies.push(movie);
+                return director.save();
+            })
+            .then(() => {
+                return addedMovie;
+            })
+            .catch(err => {
                 console.log(err);
                 throw err;
+            })
+        },
+        addDirector: async args => {
+            const directorExists = await Director.findOne({ name: args.director.name });
+            if (directorExists) {
+                throw new Error(`Director ${args.director.name} already exists`);
             }
+            else {
+                const director = new Director({
+                    name: args.director.name,
+                    birthday: new Date(args.director.birthday),
+                });
+                return director.save().then(result => {
+                    return { ...result._doc };
+                }).catch(err => {
+                    console.log(err);
+                    throw err;
+                });
+            }
+  
         } 
     },
     graphiql: true
