@@ -10,6 +10,34 @@ const cors = require('cors');
 const Movie = require('./models/movie');
 const Director = require('./models/director');
 
+const director = directorId => {
+    return Director.findById(directorId)
+    .then(user => {
+        return {
+            ...user._doc,
+            movies: movies.bind(this, user.movies)
+        }
+    })
+    .catch(err => {
+        throw err;
+    })
+}
+
+const movies = movieIds => {
+    return Movie.find({ _id: { $in: movieIds } })
+    .then(movies => {
+        return movies.map(movie => {
+            return { 
+                ...movie._doc, 
+                director: director.bind(this, movie.director)
+            }
+        })
+    })
+    .catch(err => {
+        throw err;
+    })
+}
+
 const app = express();
 dotenv.config();
 const port = process.env.PORT || 4000
@@ -28,13 +56,14 @@ app.use('/graphql', graphQlHTTP({
             _id: ID!
             title: String!
             year: Int!
-            director: String!
+            director: Director!
         }
 
         type Director {
             _id: ID!
             name: String!
             birthday: String!
+            movies: [Movie!]
         }
 
         input DirectorInput {
@@ -67,7 +96,10 @@ app.use('/graphql', graphQlHTTP({
             try {
                 const movies = await Movie.find();
                 return movies.map(movie => {
-                    return { ...movie._doc };
+                    return { 
+                        ...movie._doc,
+                        director: director.bind(this, movie._doc.director)
+                    };
                 });
             }
             catch (err) {
@@ -85,7 +117,7 @@ app.use('/graphql', graphQlHTTP({
             return movie
             .save()
             .then(result => {
-                addedMovie = { ...result._doc };
+                addedMovie = { ...result._doc, director: director.bind(this, result._doc.director) };
                 return Director.findById('5d4ede7be361ba051fcafb45');
             })
             .then(director => {
