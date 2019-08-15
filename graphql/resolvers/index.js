@@ -1,32 +1,32 @@
 const Movie = require('../../models/movie');
 const Director = require('../../models/director');
 
-const director = directorId => {
-  return Director.findById(directorId)
-  .then(user => {
-      return {
-          ...user._doc,
-          movies: movies.bind(this, user.movies)
-      }
-  })
-  .catch(err => {
-      throw err;
-  })
+const director = async directorId => {
+  try {
+    const director = await Director.findById(directorId);
+    return {
+        ...director._doc,
+        birthday: new Date(director._doc.birthday).toISOString(),
+        movies: movies.bind(this, director.movies)
+    }
+  } catch (error) {
+    throw err;
+  }
 }
 
-const movies = movieIds => {
-  return Movie.find({ _id: { $in: movieIds } })
-  .then(movies => {
-      return movies.map(movie => {
-          return { 
-              ...movie._doc, 
-              director: director.bind(this, movie.director)
-          }
-      })
-  })
-  .catch(err => {
-      throw err;
-  })
+const movies = async movieIds => {
+  try {
+    const movies = await Movie.find({ _id: { $in: movieIds } })
+    movies.map(movie => {
+        return { 
+            ...movie._doc, 
+            director: director.bind(this, movie.director)
+        }
+    });
+    return movies;
+  } catch (error) {
+    throw error;
+  }
 }
 
 module.exports = {
@@ -45,51 +45,47 @@ module.exports = {
           throw err;
       }
   },
-  addMovie: args => {
-      const movie = new Movie({
-          title: args.movie.title,
-          year: args.movie.year,
-          director: '5d4ede7be361ba051fcafb45'
-      })
+  addMovie: async args => {
 
-      return movie
-      .save()
-      .then(result => {
-          addedMovie = { ...result._doc, director: director.bind(this, result._doc.director) };
-          return Director.findById('5d4ede7be361ba051fcafb45');
-      })
-      .then(director => {
-          if(!director) {
-              throw new Error('Director doesn\'t Exist');
-          }
-          director.movies.push(movie);
-          return director.save();
-      })
-      .then(() => {
-          return addedMovie;
-      })
-      .catch(err => {
-          console.log(err);
-          throw err;
-      })
+    const movie = new Movie({
+      title: args.movie.title,
+      year: args.movie.year,
+      director: '5d4ede7be361ba051fcafb45'
+    });
+
+    try {
+      const result = await movie.save()
+      addedMovie = { 
+        ...result._doc, 
+        director: director.bind(this, result._doc.director)
+      };
+      const director = await Director.findById('5d4ede7be361ba051fcafb45');
+      if(!director) {
+        throw new Error('Director doesn\'t Exist');
+      }
+      director.movies.push(movie);
+      await director.save();
+      return addedMovie;
+    } catch (error) {
+      throw error;
+    }
   },
   addDirector: async args => {
+    try {
       const directorExists = await Director.findOne({ name: args.director.name });
       if (directorExists) {
-          throw new Error(`Director ${args.director.name} already exists`);
+        throw new Error(`Director ${args.director.name} already exists`);
+      } else {
+        const director = new Director({
+            name: args.director.name,
+            birthday: new Date(args.director.birthday),
+        });
+        const result = await director.save()
+        return { ...result._doc };
       }
-      else {
-          const director = new Director({
-              name: args.director.name,
-              birthday: new Date(args.director.birthday),
-          });
-          return director.save().then(result => {
-              return { ...result._doc };
-          }).catch(err => {
-              console.log(err);
-              throw err;
-          });
-      }
+    } catch (error) {
+      throw error;
+    }
 
   } 
 }
