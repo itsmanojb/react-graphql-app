@@ -13,7 +13,7 @@ dotenv.config();
 const port = process.env.PORT || 4000
 
 const mongoURI = `mongodb://${process.env.MLAB_USER}:${process.env.MLAB_PW}@${process.env.MLAB_SERV}/${process.env.MLAB_DB}`;
-mongoose.connect(mongoURI, { useNewUrlParser: true });
+mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.connection.once('open', () => {
     console.log('Connected to Database');
 });
