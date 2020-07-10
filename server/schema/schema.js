@@ -30,9 +30,9 @@ const MovieType = new GraphQLObjectType({
     title: { type: GraphQLString },
     genre: { type: GraphQLString },
     director: {
-      type: DirectorType,
+      type: new GraphQLList(DirectorType),
       resolve(parent, args) {
-        return directors.filter(director => director.id === parent.directorId)[0];
+        return directors.filter(director => director.id === parent.directorId);
       }
     }
   })
