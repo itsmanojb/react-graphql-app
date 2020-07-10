@@ -1,2 +1,3 @@
 # Into The Wild
-IMDB like application for information on movies.
+
+Information will be updated soon...
