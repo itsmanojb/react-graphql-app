@@ -1,7 +1,8 @@
 import React from 'react';
 import ApolloClient from 'apollo-boost';
 import { ApolloProvider } from '@apollo/react-hooks';
-import { gql } from 'apollo-boost';
+import MoviesList from './components/MoviesList';
+import AddMovie from './components/AddMovie';
 
 // Apollo client setup
 const client = new ApolloClient({
@@ -10,10 +11,21 @@ const client = new ApolloClient({
 
 const App = () => (
   <ApolloProvider client={client}>
-    <div>
-      <h2>My first Apollo app <span role="img">🚀</span> </h2>
+    <div className="app">
+      <div className="header">
+        <div className="wrapper">
+          <div className="title">Movie List </div>
+          <AddMovie />
+        </div>
+      </div>
+      <div className="all-movies">
+        <div className="grid">
+          <MoviesList />
+        </div>
+      </div>
     </div>
   </ApolloProvider>
 );
+
 
 export default App;
