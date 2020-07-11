@@ -1,9 +1,10 @@
-import React from 'react';
-import { useQuery } from '@apollo/react-hooks';
-import { gql } from 'apollo-boost';
+import React, { useState } from 'react';
+import { useQuery, useMutation } from '@apollo/react-hooks';
+import gql from 'graphql-tag';
+import { GET_MOVIES } from './MoviesList';
 
-const ALL_DIRECTORS = gql`
-  {
+const GET_DIRECTORS = gql`
+  query GetDirectors {
     directors {
       id
       name
@@ -12,49 +13,73 @@ const ALL_DIRECTORS = gql`
   }
 `;
 
+const ADD_MOVIE = gql`
+  mutation AddMovie($title: String!, $genre: String!, $directorIds: [ID!]!) {
+    addMovie(title: $title, genre: $genre, directorIds: $directorIds) {
+      id
+      title
+      genre
+    }
+  }
+`;
+
 const AddMovie = () => {
-  const { loading, error, data } = useQuery(ALL_DIRECTORS);
+  const { loading, error, data } = useQuery(GET_DIRECTORS);
+  const [title, setTitle] = useState('');
+  const [genre, setGenre] = useState('');
+  const [directorId, setDirectorId] = useState('');
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
-  // if (loading) return <p>Loading...</p>;
-  // if (error) return <p>Error :(</p>;
+  const [addMovie, { loading: mutationLoading, error: mutationError },] = useMutation(ADD_MOVIE);
 
-  // return data.movies.map(({ id, title, genre, directors }) => (
-  //   <div className="movie-card" key={id}>
-  //     <div className="card-header">
-  //       <h3>{title}</h3>
-  //       <p>{genre}</p>
-  //     </div>
-  //     <div className="card-content">
-  //       <p>Directors:</p>
-  //       <ul>
-  //         {directors.map((director, index) => (
-  //           <li key={index}>{director.name}, {director.age}</li>
-  //         ))}
-  //       </ul>
-  //     </div>
-  //   </div>
-  // ));
+  const submitForm = e => {
+    e.preventDefault();
+    setFormSubmitted(true);
+    addMovie({
+      variables: {
+        title: title,
+        genre: genre,
+        directorIds: [directorId]
+      },
+      refetchQueries: [{
+        query: GET_MOVIES
+      }]
+    });
+    resetForm();
+  }
+
+  const resetForm = () => {
+    setTitle('');
+    setGenre('');
+    setDirectorId('');
+    setFormSubmitted(false);
+  }
+
 
   return (
     <div className="add-movie">
-      <form action="">
+      <form onSubmit={(e) => submitForm(e)}>
         <div className="form-group">
           <div className="form-input">
-            <input type="text" id="title" placeholder="Movie title" />
+            <input type="text" id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Movie title" />
           </div>
           <div className="form-input">
-            <input type="text" id="genre" placeholder="Genre" />
+            <input type="text" id="genre" value={genre} onChange={(e) => setGenre(e.target.value)} placeholder="Genre" />
           </div>
           <div className="form-input">
-            <select id="directors" disabled={loading || error}>
+            <select id="directors" disabled={loading || error} defaultValue={directorId} onChange={(e) => setDirectorId(e.target.value)}>
               <option value="">Select Director(s)</option>
               {data && data.directors.map(
-                ({ id, name }, index) => (<option key={index} value={id}>{name}</option>)
+                ({ id, name }) => (<option key={id} value={id}>{name}</option>)
               )}
             </select>
           </div>
           <div className="form-input">
-            <button type="submit">Add</button>
+            <button type="submit" disabled={formSubmitted}>Add Movie</button>
+          </div>
+          <div className="form-input">
+            {mutationLoading && <p>Please wait...</p>}
+            {mutationError && <p>Error :( Please try again</p>}
           </div>
         </div>
       </form>

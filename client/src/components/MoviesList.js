@@ -1,10 +1,10 @@
 import React from 'react';
 import { useQuery } from '@apollo/react-hooks';
-import { gql } from 'apollo-boost';
+import gql from 'graphql-tag';
 
-const ALL_MOVIES = gql`
-  {
-    movies {
+export const GET_MOVIES = gql`
+  query GetMovies {
+    movies{
       id
       title
       genre
@@ -17,7 +17,7 @@ const ALL_MOVIES = gql`
 `;
 
 const MoviesList = () => {
-  const { loading, error, data } = useQuery(ALL_MOVIES);
+  const { loading, error, data } = useQuery(GET_MOVIES);
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error :(</p>;

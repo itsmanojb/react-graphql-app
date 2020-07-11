@@ -14,7 +14,7 @@ const App = () => (
     <div className="app">
       <div className="header">
         <div className="wrapper">
-          <div className="title">Add Movie </div>
+          <div className="title">Movie List </div>
           <AddMovie />
         </div>
       </div>
@@ -26,5 +26,6 @@ const App = () => (
     </div>
   </ApolloProvider>
 );
+
 
 export default App;
