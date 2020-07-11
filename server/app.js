@@ -13,7 +13,8 @@ process.on('uncaughtException', err => {
   process.exit(1);
 });
 
-const connectionString = `mongodb://${process.env.DATABASE_USER}:${process.env.DATABASE_PASS}@ds161794.mlab.com:61794/${process.env.DATABASE_NAME}`;
+const dbHost = `mongodb://${process.env.DB_USER}:${encodeURIComponent(process.env.DB_PASS)}`;
+const connectionString = `${dbHost}@${process.env.DB_PORT}/${process.env.DB_NAME}`;
 
 mongoose.connect(
   connectionString,
@@ -23,7 +24,7 @@ mongoose.connect(
   }
 );
 mongoose.connection.once('open', () => {
-  console.log(`Connected to ${process.env.DATABASE_NAME} Database`);
+  console.log(`Connected to ${process.env.DB_NAME} Database`);
 });
 
 app.use('/graphql', graphqlHTTP({
