@@ -2,10 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const { graphqlHTTP } = require('express-graphql');
 const mongoose = require('mongoose');
+const cors = require('cors');
+
 const schema = require('./schema/schema');
 
 const app = express();
 const port = process.env.PORT || 4000;
+
+app.use(cors());
 
 process.on('uncaughtException', err => {
   console.log('Unhandler Exception! Shutting Down...');
